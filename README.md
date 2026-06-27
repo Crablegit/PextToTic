@@ -2,6 +2,8 @@
 
 A web application that converts images or text into **LaTeX**, **HTML**, or **Markdown** using Google's Gemini AI. The application also supports **PDF generation from LaTeX** via XeLaTeX.
 
+<img width="1913" height="923" alt="image" src="https://github.com/user-attachments/assets/350d69bd-3e6f-456f-9cc4-58598e627648" />
+
 ## Features
 
 - Upload an image and convert it into:
