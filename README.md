@@ -151,21 +151,6 @@ http://127.0.0.1:5000
 
 ---
 
-# Project Structure
-
-```text
-project/
-│
-├── app.py
-├── templates/
-│   └── index.html
-│
-├── uploads/
-│
-└── README.md
-```
-
----
 
 # Required Python Packages
 
