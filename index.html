@@ -1,0 +1,825 @@
+<!DOCTYPE html>
+<html lang="vi" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Smart Document Transformer</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" id="hljs-light">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github-dark.min.css" id="hljs-dark" disabled>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root, [data-theme="light"] {
+      --bg-page:      #f0eeeb;
+      --bg-card:      #ffffff;
+      --bg-inset:     #f7f6f4;
+      --bg-hover:     #f0eeeb;
+      --txt-primary:  #1c1b19;
+      --txt-secondary:#52504c;
+      --txt-muted:    #99968f;
+      --border:       rgba(0,0,0,0.08);
+      --border-md:    rgba(0,0,0,0.13);
+      --border-strong:rgba(0,0,0,0.20);
+      --accent:       #4f6ef7;
+      --accent-hover: #3a57e8;
+      --accent-light: #eef1ff;
+      --accent-border:#b4bffa;
+      --accent-text:  #3045c5;
+      --red:          #e53e3e;
+      --red-light:    #fff5f5;
+      --red-border:   #feb2b2;
+      --red-text:     #c53030;
+      --green:        #38a169;
+      --green-light:  #f0fff4;
+      --radius-sm:    10px;
+      --radius-md:    16px;
+      --radius-lg:    22px;
+      --radius-xl:    28px;
+      --radius-pill:  999px;
+      --shadow-card:  0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04);
+      --shadow-btn:   0 1px 2px rgba(0,0,0,0.08);
+      --font-sans:    'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+      --font-mono:    'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+      --transition:   0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    [data-theme="dark"] {
+      --bg-page:      #111110;
+      --bg-card:      #1c1c1a;
+      --bg-inset:     #252523;
+      --bg-hover:     #2a2927;
+      --txt-primary:  #f0eeea;
+      --txt-secondary:#b0ada6;
+      --txt-muted:    #736f68;
+      --border:       rgba(255,255,255,0.07);
+      --border-md:    rgba(255,255,255,0.11);
+      --border-strong:rgba(255,255,255,0.17);
+      --accent:       #6b82f8;
+      --accent-hover: #7d92fa;
+      --accent-light: #1a1f3a;
+      --accent-border:#3045c5;
+      --accent-text:  #aab6fb;
+      --red:          #fc6868;
+      --red-light:    #2a1414;
+      --red-border:   #7a2424;
+      --red-text:     #fc8181;
+      --green:        #48bb78;
+      --green-light:  #0f2218;
+      --shadow-card:  0 1px 3px rgba(0,0,0,0.3), 0 4px 16px rgba(0,0,0,0.2);
+      --shadow-btn:   0 1px 2px rgba(0,0,0,0.3);
+    }
+
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: var(--font-sans);
+      background: var(--bg-page);
+      color: var(--txt-primary);
+      min-height: 100vh;
+      padding: 2.5rem 1.25rem 4rem;
+      transition: background var(--transition), color var(--transition);
+      line-height: 1.5;
+    }
+
+    .app { max-width: 980px; margin: 0 auto; }
+
+    /* ── Header ── */
+    .app-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 2rem;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .header-left h1 {
+      font-size: 21px; font-weight: 600;
+      color: var(--txt-primary);
+      display: flex; align-items: center; gap: 10px;
+      letter-spacing: -0.02em;
+    }
+    .icon-wrap {
+      width: 36px; height: 36px;
+      background: var(--accent-light);
+      border-radius: var(--radius-sm);
+      display: flex; align-items: center; justify-content: center;
+      color: var(--accent); font-size: 16px; flex-shrink: 0;
+    }
+    .header-left p {
+      font-size: 13.5px; color: var(--txt-muted);
+      margin-top: 4px; padding-left: 46px;
+    }
+
+    /* ── Controls bar (theme + lang) ── */
+    .header-controls { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+
+    .ctrl-group {
+      display: flex; align-items: center;
+      background: var(--bg-inset);
+      border: 1px solid var(--border-md);
+      border-radius: var(--radius-pill);
+      padding: 3px;
+    }
+    .ctrl-btn {
+      height: 30px;
+      padding: 0 12px;
+      border: none;
+      border-radius: var(--radius-pill);
+      background: transparent;
+      color: var(--txt-muted);
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center; gap: 5px;
+      font-size: 12.5px; font-weight: 500;
+      font-family: var(--font-sans);
+      transition: background var(--transition), color var(--transition);
+      white-space: nowrap;
+    }
+    .ctrl-btn i { font-size: 13px; }
+    .ctrl-btn.icon-only { width: 34px; padding: 0; }
+    .ctrl-btn.active {
+      background: var(--bg-card);
+      color: var(--txt-primary);
+      box-shadow: var(--shadow-btn);
+    }
+
+    /* ── Layout ── */
+    .layout {
+      display: grid;
+      grid-template-columns: 380px 1fr;
+      gap: 16px; align-items: start;
+    }
+    @media (max-width: 740px) { .layout { grid-template-columns: 1fr; } }
+
+    /* ── Card ── */
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xl);
+      padding: 1.5rem;
+      box-shadow: var(--shadow-card);
+      transition: background var(--transition), border-color var(--transition);
+    }
+
+    .section-label {
+      font-size: 10.5px; font-weight: 600;
+      text-transform: uppercase; letter-spacing: 0.09em;
+      color: var(--txt-muted); margin-bottom: 16px;
+    }
+
+    .field { margin-bottom: 18px; }
+    .field > label {
+      display: block; font-size: 13px; font-weight: 500;
+      color: var(--txt-secondary); margin-bottom: 8px;
+    }
+
+    /* ── Upload zone ── */
+    .upload-zone {
+      border: 1.5px dashed var(--border-md);
+      border-radius: var(--radius-md);
+      padding: 22px 16px; text-align: center;
+      cursor: pointer; background: var(--bg-inset);
+      transition: all var(--transition); user-select: none;
+    }
+    .upload-zone:hover { border-color: var(--accent-border); background: var(--accent-light); }
+    .upload-zone.drag-over { border-color: var(--accent); background: var(--accent-light); transform: scale(1.01); }
+    .upload-icon-wrap {
+      width: 44px; height: 44px;
+      background: var(--bg-card); border: 1px solid var(--border-md);
+      border-radius: var(--radius-sm);
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 10px; font-size: 18px; color: var(--txt-muted);
+      box-shadow: var(--shadow-btn);
+    }
+    .upload-zone .upload-title { font-size: 13px; font-weight: 500; color: var(--txt-secondary); }
+    .upload-zone .upload-hint  { font-size: 11.5px; color: var(--txt-muted); margin-top: 2px; }
+    .upload-zone input { display: none; }
+
+    #fileName {
+      font-size: 12px; color: var(--accent-text);
+      margin-top: 8px; display: none;
+      align-items: center; gap: 5px;
+      padding: 5px 10px;
+      background: var(--accent-light);
+      border-radius: var(--radius-pill);
+      width: fit-content;
+    }
+
+    .or-divider {
+      display: flex; align-items: center; gap: 10px; margin: 16px 0;
+    }
+    .or-divider::before, .or-divider::after {
+      content: ''; flex: 1; height: 1px; background: var(--border);
+    }
+    .or-divider span {
+      font-size: 11px; font-weight: 500; color: var(--txt-muted);
+      padding: 2px 8px; background: var(--bg-inset);
+      border-radius: var(--radius-pill); border: 1px solid var(--border);
+    }
+
+    textarea {
+      width: 100%; min-height: 88px; resize: vertical;
+      font-size: 13px; font-family: var(--font-mono);
+      padding: 11px 14px;
+      background: var(--bg-inset); border: 1px solid var(--border-md);
+      border-radius: var(--radius-md); color: var(--txt-primary);
+      outline: none; line-height: 1.65;
+      transition: border-color var(--transition), box-shadow var(--transition), background var(--transition);
+    }
+    textarea:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(79,110,247,0.15);
+      background: var(--bg-card);
+    }
+    textarea::placeholder { color: var(--txt-muted); font-family: var(--font-sans); }
+
+    .format-tabs {
+      display: flex; gap: 0;
+      background: var(--bg-inset); border: 1px solid var(--border-md);
+      border-radius: var(--radius-md); padding: 4px;
+    }
+    .fmt-btn {
+      flex: 1; padding: 7px 0; font-size: 13px; font-weight: 500;
+      border: none; border-radius: 10px;
+      background: transparent; color: var(--txt-muted);
+      cursor: pointer; transition: all var(--transition); text-align: center;
+      font-family: var(--font-sans);
+    }
+    .fmt-btn:hover { color: var(--txt-primary); background: var(--bg-hover); }
+    .fmt-btn.active { background: var(--bg-card); color: var(--accent); box-shadow: var(--shadow-btn); }
+
+    .toggles { display: flex; flex-direction: column; gap: 12px; margin: 18px 0; }
+    .toggle-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .toggle-label { font-size: 13px; color: var(--txt-secondary); }
+    .toggle-sub { font-size: 11.5px; color: var(--txt-muted); font-weight: 400; }
+
+    .toggle { position: relative; width: 36px; height: 20px; flex-shrink: 0; }
+    .toggle input { opacity: 0; width: 0; height: 0; }
+    .toggle-track {
+      position: absolute; inset: 0;
+      border-radius: var(--radius-pill);
+      background: var(--border-strong); cursor: pointer;
+      transition: background var(--transition);
+    }
+    .toggle input:checked + .toggle-track { background: var(--accent); }
+    .toggle-track::after {
+      content: ''; position: absolute;
+      width: 16px; height: 16px; border-radius: 50%;
+      background: white; top: 2px; left: 2px;
+      transition: transform var(--transition);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    }
+    .toggle input:checked + .toggle-track::after { transform: translateX(16px); }
+
+    .submit-btn {
+      width: 100%; padding: 12px; font-size: 14px; font-weight: 600;
+      background: var(--accent); color: #fff; border: none;
+      border-radius: var(--radius-md); cursor: pointer;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      transition: background var(--transition), transform 0.1s, box-shadow var(--transition);
+      box-shadow: 0 2px 8px rgba(79,110,247,0.35);
+      letter-spacing: 0.01em; font-family: var(--font-sans);
+    }
+    .submit-btn:hover { background: var(--accent-hover); box-shadow: 0 4px 14px rgba(79,110,247,0.45); }
+    .submit-btn:active { transform: scale(0.98); }
+
+    .right-col { display: flex; flex-direction: column; gap: 12px; }
+
+    .output-tabs {
+      display: flex;
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: var(--radius-lg); padding: 4px;
+      box-shadow: var(--shadow-card);
+    }
+    .out-tab {
+      flex: 1; padding: 8px 14px; font-size: 13px; font-weight: 500;
+      border: none; background: transparent; color: var(--txt-muted);
+      cursor: pointer; border-radius: var(--radius-md);
+      display: flex; align-items: center; justify-content: center; gap: 7px;
+      transition: all var(--transition); font-family: var(--font-sans);
+    }
+    .out-tab i { font-size: 13px; }
+    .out-tab:hover { color: var(--txt-primary); background: var(--bg-hover); }
+    .out-tab.active { background: var(--accent-light); color: var(--accent); box-shadow: var(--shadow-btn); }
+
+    .output-panel {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: var(--radius-xl); min-height: 300px;
+      overflow: hidden; position: relative;
+      box-shadow: var(--shadow-card);
+      transition: background var(--transition), border-color var(--transition);
+    }
+    .code-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 11px 16px; border-bottom: 1px solid var(--border);
+      background: var(--bg-inset);
+    }
+    .lang-badge {
+      font-size: 11px; font-weight: 500; color: var(--txt-muted);
+      font-family: var(--font-mono); background: var(--bg-card);
+      padding: 3px 10px; border-radius: var(--radius-pill); border: 1px solid var(--border-md);
+    }
+    .copy-btn {
+      font-size: 12px; font-weight: 500; color: var(--txt-secondary);
+      background: var(--bg-card); border: 1px solid var(--border-md);
+      cursor: pointer; display: flex; align-items: center; gap: 5px;
+      padding: 5px 12px; border-radius: var(--radius-pill);
+      transition: all var(--transition); font-family: var(--font-sans);
+    }
+    .copy-btn:hover { background: var(--accent-light); color: var(--accent); border-color: var(--accent-border); }
+    .copy-btn.copied { background: var(--green-light); color: var(--green); border-color: var(--green); }
+
+    pre {
+      background: var(--bg-inset); padding: 16px 18px;
+      font-size: 12.5px; font-family: var(--font-mono);
+      overflow-x: auto; min-height: 240px; line-height: 1.7;
+    }
+    pre code { background: transparent !important; padding: 0 !important; border-radius: 0 !important; }
+
+    .preview-inner {
+      padding: 20px; min-height: 240px;
+      font-size: 14px; color: var(--txt-secondary); line-height: 1.75;
+    }
+
+    .empty-state {
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      min-height: 260px; gap: 12px;
+    }
+    .empty-icon {
+      width: 52px; height: 52px;
+      background: var(--bg-inset); border: 1px solid var(--border-md);
+      border-radius: var(--radius-md);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px; color: var(--txt-muted);
+    }
+    .empty-state p { font-size: 13px; color: var(--txt-muted); }
+
+    .pdf-bar { display: flex; justify-content: flex-end; }
+    .pdf-btn {
+      display: flex; align-items: center; gap: 7px;
+      font-size: 13px; font-weight: 500; color: var(--red-text);
+      background: var(--red-light); border: 1px solid var(--red-border);
+      border-radius: var(--radius-pill); padding: 7px 16px;
+      text-decoration: none; transition: all var(--transition);
+    }
+    .pdf-btn:hover { background: var(--red); color: white; border-color: var(--red); }
+
+    .loading-overlay {
+      display: none; position: absolute; inset: 0;
+      background: rgba(255,255,255,0.82); backdrop-filter: blur(4px);
+      z-index: 10; border-radius: var(--radius-xl);
+      align-items: center; justify-content: center;
+      flex-direction: column; gap: 14px;
+    }
+    [data-theme="dark"] .loading-overlay { background: rgba(28,28,26,0.85); }
+    .spinner-wrap {
+      width: 48px; height: 48px; background: var(--bg-card);
+      border-radius: var(--radius-md); border: 1px solid var(--border-md);
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: var(--shadow-card);
+    }
+    .spinner {
+      width: 22px; height: 22px;
+      border: 2.5px solid var(--border-strong); border-top-color: var(--accent);
+      border-radius: 50%; animation: spin 0.7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading-overlay p   { font-size: 13px; font-weight: 500; color: var(--txt-secondary); }
+    .loading-overlay small { font-size: 11.5px; color: var(--txt-muted); }
+  </style>
+</head>
+<body>
+<div class="app">
+
+  <!-- ── Header ── -->
+  <div class="app-header">
+    <div class="header-left">
+      <h1>
+        <span class="icon-wrap"><i class="fa-solid fa-wand-magic-sparkles"></i></span>
+        Smart Document Transformer
+      </h1>
+      <p data-i18n="subtitle">Convert images or text to LaTeX, HTML, or Markdown</p>
+    </div>
+
+    <div class="header-controls">
+      <!-- Language toggle -->
+      <div class="ctrl-group" role="group" aria-label="Language">
+        <button class="ctrl-btn" id="btnVI" onclick="setLang('vi')" aria-pressed="false">
+          <span>🇻🇳</span> Tiếng Việt
+        </button>
+        <button class="ctrl-btn" id="btnEN" onclick="setLang('en')" aria-pressed="false">
+          <span>🇺🇸</span> English
+        </button>
+      </div>
+
+      <!-- Theme toggle -->
+      <div class="ctrl-group" role="group" aria-label="Color theme">
+        <button class="ctrl-btn icon-only" id="btnLight" onclick="setTheme('light')" title="Light mode" aria-pressed="false">
+          <i class="fa-solid fa-sun"></i>
+        </button>
+        <button class="ctrl-btn icon-only" id="btnDark" onclick="setTheme('dark')" title="Dark mode" aria-pressed="false">
+          <i class="fa-solid fa-moon"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="layout">
+
+    <!-- ── LEFT: Input ── -->
+    <div class="card">
+      <p class="section-label" data-i18n="input_label">Input</p>
+
+      <div class="field">
+        <label data-i18n="upload_label">Upload image</label>
+        <div class="upload-zone" id="uploadZone" onclick="document.getElementById('imageInput').click()" role="button" tabindex="0">
+          <input type="file" id="imageInput" accept="image/*">
+          <div class="upload-icon-wrap"><i class="fa-solid fa-arrow-up-from-bracket"></i></div>
+          <div class="upload-title" data-i18n="upload_title">Click to upload</div>
+          <div class="upload-hint" data-i18n="upload_hint">or drag and drop an image here</div>
+        </div>
+        <div id="fileName">
+          <i class="fa-solid fa-circle-check" style="color:var(--green)"></i>
+          <span id="fileNameText"></span>
+        </div>
+      </div>
+
+      <div class="or-divider"><span data-i18n="or">or</span></div>
+
+      <div class="field">
+        <label data-i18n="text_label">Type content <span class="toggle-sub" data-i18n="text_sub">(math or text)</span></label>
+        <textarea id="textInput" data-i18n-placeholder="text_placeholder" placeholder="e.g. \int_0^1 x^2 dx or 2^x..."></textarea>
+      </div>
+
+      <div class="field">
+        <label data-i18n="format_label">Output format</label>
+        <div class="format-tabs">
+          <button class="fmt-btn active" data-fmt="LaTeX">LaTeX</button>
+          <button class="fmt-btn" data-fmt="HTML">HTML</button>
+          <button class="fmt-btn" data-fmt="Markdown">Markdown</button>
+        </div>
+      </div>
+
+      <div class="toggles">
+        <div class="toggle-row">
+          <label class="toggle-label" data-i18n="toggle_preview">Show preview</label>
+          <label class="toggle">
+            <input type="checkbox" id="showPreview" checked>
+            <span class="toggle-track"></span>
+          </label>
+        </div>
+        <div class="toggle-row">
+          <label class="toggle-label">
+            <span data-i18n="toggle_pdf">Compile to PDF</span>
+            <span class="toggle-sub" data-i18n="toggle_pdf_sub"> (LaTeX only)</span>
+          </label>
+          <label class="toggle">
+            <input type="checkbox" id="exportPdf">
+            <span class="toggle-track"></span>
+          </label>
+        </div>
+      </div>
+
+      <button class="submit-btn" onclick="handleConvert()">
+        <i class="fa-solid fa-bolt"></i>
+        <span data-i18n="btn_convert">Convert</span>
+      </button>
+    </div>
+
+    <!-- ── RIGHT: Output ── -->
+    <div class="right-col">
+
+      <div class="output-tabs">
+        <button class="out-tab active" data-tab="code">
+          <i class="fa-solid fa-code"></i>
+          <span data-i18n="tab_code">Source code</span>
+        </button>
+        <button class="out-tab" data-tab="preview">
+          <i class="fa-solid fa-eye"></i>
+          <span data-i18n="tab_preview">Preview</span>
+        </button>
+      </div>
+
+      <div id="pdfBar" class="pdf-bar" style="display:none">
+        <a id="btnDownloadPdf" href="#" class="pdf-btn">
+          <i class="fa-solid fa-file-pdf"></i>
+          <span data-i18n="btn_pdf">Download PDF</span>
+        </a>
+      </div>
+
+      <div class="output-panel">
+        <div class="loading-overlay" id="loadingOverlay">
+          <div class="spinner-wrap"><div class="spinner"></div></div>
+          <p data-i18n="loading_title">Analyzing content…</p>
+          <small data-i18n="loading_sub">Checking libraries and cross-referencing</small>
+        </div>
+
+        <div id="tabCode">
+          <div class="code-header">
+            <span class="lang-badge" id="langBadge">latex</span>
+            <button class="copy-btn" id="copyBtn" onclick="copyCode()">
+              <i class="fa-regular fa-copy"></i>
+              <span data-i18n="btn_copy">Copy</span>
+            </button>
+          </div>
+          <pre><code id="outputCode" class="language-latex"></code></pre>
+        </div>
+
+        <div id="tabPreview" style="display:none">
+          <div class="preview-inner" id="outputPreview">
+            <div class="empty-state">
+              <div class="empty-icon"><i class="fa-regular fa-eye-slash"></i></div>
+              <p data-i18n="empty_preview">Preview will appear here after conversion</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+  /* ══════════════════════════════════════════
+     i18n — translations
+  ══════════════════════════════════════════ */
+  const TRANSLATIONS = {
+    en: {
+      subtitle:        'Convert images or text to LaTeX, HTML, or Markdown',
+      input_label:     'Input',
+      upload_label:    'Upload image',
+      upload_title:    'Click to upload',
+      upload_hint:     'or drag and drop an image here',
+      or:              'or',
+      text_label:      'Type content',
+      text_sub:        '(math or text)',
+      text_placeholder:'e.g. \\int_0^1 x^2 dx or 2^x...',
+      format_label:    'Output format',
+      toggle_preview:  'Show preview',
+      toggle_pdf:      'Compile to PDF',
+      toggle_pdf_sub:  ' (LaTeX only)',
+      btn_convert:     'Convert',
+      tab_code:        'Source code',
+      tab_preview:     'Preview',
+      btn_pdf:         'Download PDF',
+      btn_copy:        'Copy',
+      btn_copied:      'Copied',
+      loading_title:   'Analyzing content…',
+      loading_sub:     'Checking libraries and cross-referencing',
+      empty_preview:   'Preview will appear here after conversion',
+      empty_off:       'Preview is turned off',
+      alert_empty:     'Provide an image or some text to convert.',
+      alert_error:     'Error: ',
+      alert_conn:      'Connection error: ',
+      latex_note:      'LaTeX preview renders equations only — download PDF for the full compile.',
+    },
+    vi: {
+      subtitle:        'Chuyển đổi ảnh hoặc văn bản sang LaTeX, HTML, hoặc Markdown',
+      input_label:     'Đầu vào',
+      upload_label:    'Tải ảnh lên',
+      upload_title:    'Nhấp để tải lên',
+      upload_hint:     'hoặc kéo thả ảnh vào đây',
+      or:              'hoặc',
+      text_label:      'Nhập nội dung',
+      text_sub:        '(toán học hoặc văn bản)',
+      text_placeholder:'Ví dụ: \\int_0^1 x^2 dx hoặc 2^x...',
+      format_label:    'Định dạng đầu ra',
+      toggle_preview:  'Bật xem trước',
+      toggle_pdf:      'Biên dịch ra PDF',
+      toggle_pdf_sub:  ' (chỉ dành cho LaTeX)',
+      btn_convert:     'Chuyển đổi',
+      tab_code:        'Mã nguồn',
+      tab_preview:     'Xem trước',
+      btn_pdf:         'Tải file PDF',
+      btn_copy:        'Sao chép',
+      btn_copied:      'Đã sao chép',
+      loading_title:   'Đang phân tích nội dung…',
+      loading_sub:     'Đang kiểm tra thư viện và đối chiếu',
+      empty_preview:   'Kết quả xem trước sẽ hiện ở đây sau khi chuyển đổi',
+      empty_off:       'Chế độ xem trước đã tắt',
+      alert_empty:     'Vui lòng cung cấp ảnh hoặc nhập nội dung văn bản.',
+      alert_error:     'Lỗi: ',
+      alert_conn:      'Lỗi kết nối: ',
+      latex_note:      'Chế độ xem trước LaTeX chỉ hiển thị phương trình — tải PDF để xem kết quả biên dịch đầy đủ.',
+    }
+  };
+
+  let currentLang = 'en';
+
+  function setLang(lang) {
+    currentLang = lang;
+    localStorage.setItem('lang', lang);
+    document.documentElement.setAttribute('lang', lang);
+
+    document.getElementById('btnVI').classList.toggle('active', lang === 'vi');
+    document.getElementById('btnEN').classList.toggle('active', lang === 'en');
+    document.getElementById('btnVI').setAttribute('aria-pressed', lang === 'vi');
+    document.getElementById('btnEN').setAttribute('aria-pressed', lang === 'en');
+
+    const t = TRANSLATIONS[lang];
+
+    // Update all data-i18n elements
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+      const key = el.getAttribute('data-i18n');
+      if (t[key] !== undefined) el.textContent = t[key];
+    });
+
+    // Update placeholders
+    document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+      const key = el.getAttribute('data-i18n-placeholder');
+      if (t[key] !== undefined) el.setAttribute('placeholder', t[key]);
+    });
+
+    // Update copy button (preserve icon)
+    const copyBtn = document.getElementById('copyBtn');
+    if (!copyBtn.classList.contains('copied')) {
+      copyBtn.innerHTML = `<i class="fa-regular fa-copy"></i> ${t.btn_copy}`;
+    }
+
+    // Update code placeholder if empty
+    const codeEl = document.getElementById('outputCode');
+    if (!codeEl.textContent.trim()) {
+      codeEl.textContent = '';
+    }
+  }
+
+  /* ══════════════════════════════════════════
+     Theme
+  ══════════════════════════════════════════ */
+  function setTheme(t) {
+    document.documentElement.setAttribute('data-theme', t);
+    localStorage.setItem('theme', t);
+    document.getElementById('btnLight').classList.toggle('active', t === 'light');
+    document.getElementById('btnDark').classList.toggle('active',  t === 'dark');
+    document.getElementById('btnLight').setAttribute('aria-pressed', t === 'light');
+    document.getElementById('btnDark').setAttribute('aria-pressed',  t === 'dark');
+    document.getElementById('hljs-light').disabled = (t === 'dark');
+    document.getElementById('hljs-dark').disabled  = (t === 'light');
+  }
+
+  /* ── Init on load ── */
+  (function init() {
+    const savedTheme = localStorage.getItem('theme')
+      || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    setTheme(savedTheme);
+
+    const savedLang = localStorage.getItem('lang')
+      || (navigator.language.startsWith('vi') ? 'vi' : 'en');
+    setLang(savedLang);
+  })();
+
+  /* ══════════════════════════════════════════
+     Format tabs
+  ══════════════════════════════════════════ */
+  let selectedFormat = 'LaTeX';
+  document.querySelectorAll('.fmt-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.fmt-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      selectedFormat = btn.dataset.fmt;
+      updateLangBadge();
+    });
+  });
+
+  /* ══════════════════════════════════════════
+     Output tabs
+  ══════════════════════════════════════════ */
+  document.querySelectorAll('.out-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.out-tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      const isCode = tab.dataset.tab === 'code';
+      document.getElementById('tabCode').style.display    = isCode ? '' : 'none';
+      document.getElementById('tabPreview').style.display = isCode ? 'none' : '';
+    });
+  });
+
+  /* ══════════════════════════════════════════
+     File input + drag & drop
+  ══════════════════════════════════════════ */
+  document.getElementById('imageInput').addEventListener('change', e => {
+    const file = e.target.files[0];
+    const el   = document.getElementById('fileName');
+    if (file) {
+      document.getElementById('fileNameText').textContent = file.name;
+      el.style.display = 'flex';
+    } else {
+      el.style.display = 'none';
+    }
+  });
+
+  const uploadZone = document.getElementById('uploadZone');
+  uploadZone.addEventListener('dragover',  e => { e.preventDefault(); uploadZone.classList.add('drag-over'); });
+  uploadZone.addEventListener('dragleave', ()  => uploadZone.classList.remove('drag-over'));
+  uploadZone.addEventListener('drop', e => {
+    e.preventDefault(); uploadZone.classList.remove('drag-over');
+    const file = e.dataTransfer.files[0];
+    if (file && file.type.startsWith('image/')) {
+      const dt = new DataTransfer(); dt.items.add(file);
+      document.getElementById('imageInput').files = dt.files;
+      document.getElementById('fileNameText').textContent = file.name;
+      document.getElementById('fileName').style.display = 'flex';
+    }
+  });
+  uploadZone.addEventListener('keydown', e => {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); uploadZone.click(); }
+  });
+
+  /* ══════════════════════════════════════════
+     Helpers
+  ══════════════════════════════════════════ */
+  function t(key) { return TRANSLATIONS[currentLang][key] || key; }
+
+  function updateLangBadge() {
+    const map = { LaTeX: 'latex', HTML: 'html', Markdown: 'markdown' };
+    document.getElementById('langBadge').textContent = map[selectedFormat] || 'text';
+  }
+
+  function copyCode() {
+    const code = document.getElementById('outputCode').textContent;
+    navigator.clipboard.writeText(code).then(() => {
+      const btn = document.getElementById('copyBtn');
+      btn.classList.add('copied');
+      btn.innerHTML = `<i class="fa-solid fa-check"></i> ${t('btn_copied')}`;
+      setTimeout(() => {
+        btn.classList.remove('copied');
+        btn.innerHTML = `<i class="fa-regular fa-copy"></i> ${t('btn_copy')}`;
+      }, 2000);
+    });
+  }
+
+  /* ══════════════════════════════════════════
+     Convert
+  ══════════════════════════════════════════ */
+  async function handleConvert() {
+    const file      = document.getElementById('imageInput').files[0];
+    const text      = document.getElementById('textInput').value;
+    const showPrev  = document.getElementById('showPreview').checked;
+    const exportPdf = document.getElementById('exportPdf').checked;
+
+    if (!file && !text.trim()) { alert(t('alert_empty')); return; }
+
+    document.getElementById('loadingOverlay').style.display = 'flex';
+    document.getElementById('pdfBar').style.display = 'none';
+
+    const formData = new FormData();
+    if (file) formData.append('image', file);
+    formData.append('text', text);
+    formData.append('format', selectedFormat);
+    formData.append('export_pdf', exportPdf);
+
+    try {
+      const res    = await fetch('/api/convert', { method: 'POST', body: formData });
+      const result = await res.json();
+      if (result.error) { alert(t('alert_error') + result.error); return; }
+
+      const codeEl = document.getElementById('outputCode');
+      codeEl.textContent = result.code;
+      codeEl.className = '';
+      if (selectedFormat === 'LaTeX')    codeEl.classList.add('language-latex');
+      if (selectedFormat === 'HTML')     codeEl.classList.add('language-xml');
+      if (selectedFormat === 'Markdown') codeEl.classList.add('language-markdown');
+      hljs.highlightElement(codeEl);
+      updateLangBadge();
+
+      if (result.pdf_url) {
+        document.getElementById('pdfBar').style.display = 'flex';
+        document.getElementById('btnDownloadPdf').href  = result.pdf_url;
+      }
+
+      const previewBox = document.getElementById('outputPreview');
+      if (showPrev) {
+        if (selectedFormat === 'HTML') {
+          previewBox.innerHTML = result.code;
+        } else if (selectedFormat === 'Markdown') {
+          previewBox.innerHTML = typeof marked !== 'undefined' ? marked.parse(result.code) : result.code;
+          if (window.MathJax) MathJax.typesetPromise([previewBox]);
+        } else {
+          previewBox.innerHTML =
+            `<div style="font-size:12px;color:var(--txt-muted);padding:0 0 12px;margin-bottom:14px;border-bottom:1px solid var(--border)">
+              ${t('latex_note')}
+            </div>
+            <div>\\[ ${result.code} \\]</div>`;
+          if (window.MathJax) MathJax.typesetPromise([previewBox]);
+        }
+      } else {
+        previewBox.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-icon"><i class="fa-regular fa-eye-slash"></i></div>
+            <p>${t('empty_off')}</p>
+          </div>`;
+      }
+
+    } catch (err) {
+      alert(t('alert_conn') + err.message);
+    } finally {
+      document.getElementById('loadingOverlay').style.display = 'none';
+    }
+  }
+</script>
+</body>
+</html>
